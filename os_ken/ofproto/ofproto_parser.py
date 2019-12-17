@@ -53,6 +53,7 @@ def register_msg_parser(version):
 
 
 def msg(datapath, version, msg_type, msg_len, xid, buf):
+    LOG.info('%s(): caller(): %s', utils.get_fname(1), utils.get_fname(2))
     exp = None
     try:
         assert len(buf) >= msg_len
@@ -93,6 +94,7 @@ def create_list_of_base_attributes(f):
 
 
 def ofp_msg_from_jsondict(dp, jsondict):
+    LOG.info('%s(): caller(): %s', utils.get_fname(1), utils.get_fname(2))
     """
     This function instanticates an appropriate OpenFlow message class
     from the given JSON style dictionary.
@@ -126,6 +128,7 @@ def ofp_msg_from_jsondict(dp, jsondict):
 
 
 def ofp_instruction_from_jsondict(dp, jsonlist, encap=True):
+    LOG.info('%s(): caller(): %s', utils.get_fname(1), utils.get_fname(2))
     """
     This function is intended to be used with
     os_ken.lib.ofctl_string.ofp_instruction_from_str.
@@ -185,6 +188,7 @@ class StringifyMixin(stringify.StringifyMixin):
 
 
 class MsgBase(StringifyMixin):
+    LOG.info('%s(): caller(): %s', utils.get_fname(1), utils.get_fname(2))
     """
     This is a base class for OpenFlow message classes.
 
@@ -204,6 +208,7 @@ class MsgBase(StringifyMixin):
 
     @create_list_of_base_attributes
     def __init__(self, datapath):
+        LOG.info('%s(): caller(): %s', utils.get_fname(1), utils.get_fname(2))
         super(MsgBase, self).__init__()
         self.datapath = datapath
         self.version = None
@@ -272,6 +277,7 @@ class MsgBase(StringifyMixin):
 
 
 class MsgInMsgBase(MsgBase):
+    LOG.info('%s(): caller(): %s', utils.get_fname(1), utils.get_fname(2))
     @classmethod
     def _decode_value(cls, k, json_value, decode_string=base64.b64decode,
                       **additional_args):
