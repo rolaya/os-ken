@@ -18,9 +18,13 @@
 
 from os_ken.base import app_manager
 from . import event
+import logging
+import sys
 
+LOG = logging.getLogger(__name__)
 
 def get_datapath(app, dpid=None):
+    LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
     """
     Get datapath object by dpid.
 
@@ -51,6 +55,7 @@ def get_datapath(app, dpid=None):
 
 
 def send_msg(app, msg, reply_cls=None, reply_multi=False):
+    LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
     """
     Send an OpenFlow message and wait for reply messages.
 

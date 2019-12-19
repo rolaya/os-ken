@@ -26,6 +26,8 @@ import select
 import msgpack
 import six
 
+import sys
+import logging
 
 class MessageType(object):
     REQUEST = 0
@@ -34,22 +36,26 @@ class MessageType(object):
 
 
 class MessageEncoder(object):
+    LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
     """msgpack-rpc encoder/decoder.
     intended to be transport-agnostic.
     """
 
     def __init__(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         super(MessageEncoder, self).__init__()
         self._packer = msgpack.Packer(encoding='utf-8', use_bin_type=True)
         self._unpacker = msgpack.Unpacker(encoding='utf-8')
         self._next_msgid = 0
 
     def _create_msgid(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         this_id = self._next_msgid
         self._next_msgid = (self._next_msgid + 1) % 0xffffffff
         return this_id
 
     def create_request(self, method, params):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         assert isinstance(method, (str, six.binary_type))
         assert isinstance(params, list)
         msgid = self._create_msgid()
@@ -57,17 +63,20 @@ class MessageEncoder(object):
             [MessageType.REQUEST, msgid, method, params]), msgid)
 
     def create_response(self, msgid, error=None, result=None):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         assert isinstance(msgid, int)
         assert 0 <= msgid <= 0xffffffff
         assert error is None or result is None
         return self._packer.pack([MessageType.RESPONSE, msgid, error, result])
 
     def create_notification(self, method, params):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         assert isinstance(method, (str, six.binary_type))
         assert isinstance(params, list)
         return self._packer.pack([MessageType.NOTIFY, method, params])
 
     def get_and_dispatch_messages(self, data, disp_table):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """dissect messages from a raw stream data.
         disp_table[type] should be a callable for the corresponding
         MessageType.
@@ -78,6 +87,7 @@ class MessageEncoder(object):
 
     @staticmethod
     def _dispatch_message(m, disp_table):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         # XXX validation
         t = m[0]
         try:
@@ -89,11 +99,13 @@ class MessageEncoder(object):
 
 
 class EndPoint(object):
+    LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
     """An endpoint
     *sock* is a socket-like.  it can be either blocking or non-blocking.
     """
 
     def __init__(self, sock, encoder=None, disp_table=None):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         if encoder is None:
             encoder = MessageEncoder()
         self._encoder = encoder
@@ -117,6 +129,7 @@ class EndPoint(object):
         self._closed_by_peer = False
 
     def selectable(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         rlist = [self._sock]
         wlist = []
         if self._send_buffer:
@@ -124,6 +137,7 @@ class EndPoint(object):
         return rlist, wlist
 
     def process_outgoing(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         try:
             sent_bytes = self._sock.send(self._send_buffer)
         except IOError:
@@ -131,26 +145,32 @@ class EndPoint(object):
         del self._send_buffer[:sent_bytes]
 
     def process_incoming(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         self.receive_messages(all=True)
 
     def process(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         self.process_outgoing()
         self.process_incoming()
 
     def block(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         rlist, wlist = self.selectable()
         select.select(rlist, wlist, rlist + wlist)
 
     def serve(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         while not self._closed_by_peer:
             self.block()
             self.process()
 
     def _send_message(self, msg):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         self._send_buffer += msg
         self.process_outgoing()
 
     def send_request(self, method, params):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """Send a request
         """
         msg, msgid = self._encoder.create_request(method, params)
@@ -159,18 +179,21 @@ class EndPoint(object):
         return msgid
 
     def send_response(self, msgid, error=None, result=None):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """Send a response
         """
         msg = self._encoder.create_response(msgid, error, result)
         self._send_message(msg)
 
     def send_notification(self, method, params):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """Send a notification
         """
         msg = self._encoder.create_notification(method, params)
         self._send_message(msg)
 
     def receive_messages(self, all=False):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """Try to receive some messages.
         Received messages are put on the internal queues.
         They can be retrieved using get_xxx() methods.
@@ -190,10 +213,12 @@ class EndPoint(object):
         return self._incoming > 0
 
     def _enqueue_incoming_request(self, m):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         self._requests.append(m)
         self._incoming += 1
 
     def _enqueue_incoming_response(self, m):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         msgid, error, result = m
         try:
             self._pending_requests.remove(msgid)
@@ -206,10 +231,12 @@ class EndPoint(object):
         self._incoming += 1
 
     def _enqueue_incoming_notification(self, m):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         self._notifications.append(m)
         self._incoming += 1
 
     def _get_message(self, q):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         try:
             m = q.popleft()
             assert self._incoming > 0
@@ -219,9 +246,11 @@ class EndPoint(object):
             return None
 
     def get_request(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         return self._get_message(self._requests)
 
     def get_response(self, msgid):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         try:
             m = self._responses.pop(msgid)
             assert self._incoming > 0
@@ -236,26 +265,32 @@ class EndPoint(object):
 
 
 class RPCError(Exception):
+    LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
     """an error from server
     """
 
     def __init__(self, error):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         super(RPCError, self).__init__()
         self._error = error
 
     def get_value(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         return self._error
 
     def __str__(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         return str(self._error)
 
 
 class Client(object):
+    LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
     """a convenient class for a pure rpc client
     *sock* is a socket-like.  it should be blocking.
     """
 
     def __init__(self, sock, encoder=None, notification_callback=None):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         self._endpoint = EndPoint(sock, encoder)
         if notification_callback is None:
             # ignore notifications by default
@@ -264,16 +299,19 @@ class Client(object):
             self._notification_callback = notification_callback
 
     def _process_input_notification(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         n = self._endpoint.get_notification()
         if n:
             self._notification_callback(n)
 
     def _process_input_request(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         # ignore requests as we are a pure client
         # XXXwarn
         self._endpoint.get_request()
 
     def call(self, method, params):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """synchronous call.
         send a request and wait for a response.
         return a result.  or raise RPCError exception if the peer
@@ -293,11 +331,13 @@ class Client(object):
             self._process_input_request()
 
     def send_notification(self, method, params):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """send a notification to the peer.
         """
         self._endpoint.send_notification(method, params)
 
     def receive_notification(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """wait for the next incoming message.
         intended to be used when we have nothing to send but want to receive
         notifications.
@@ -308,6 +348,7 @@ class Client(object):
         self._process_input_request()
 
     def peek_notification(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         while True:
             rlist, _wlist = self._endpoint.selectable()
             rlist, _wlist, _xlist = select.select(rlist, [], [], 0)

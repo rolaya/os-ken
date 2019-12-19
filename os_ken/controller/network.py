@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import collections
+import logging
 
 from os_ken.base import app_manager
 import os_ken.exception as os_ken_exc
@@ -23,14 +25,18 @@ from os_ken.exception import NetworkNotFound, NetworkAlreadyExist
 from os_ken.exception import PortAlreadyExist, PortNotFound, PortUnknown
 
 
+LOG = logging.getLogger(__name__)
+
 NW_ID_UNKNOWN = '__NW_ID_UNKNOWN__'
 
 
 class MacAddressAlreadyExist(os_ken_exc.OSKenException):
+    self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
     message = 'port (%(dpid)s, %(port)s) has already mac %(mac_address)s'
 
 
 class EventNetworkDel(event.EventBase):
+    self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
     """
     An event class for network deletion.
 
@@ -50,6 +56,7 @@ class EventNetworkDel(event.EventBase):
 
 
 class EventNetworkPort(event.EventBase):
+    self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
     """
     An event class for notification of port arrival and deperture.
 
@@ -68,6 +75,7 @@ class EventNetworkPort(event.EventBase):
     """
 
     def __init__(self, network_id, dpid, port_no, add_del):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         super(EventNetworkPort, self).__init__()
         self.network_id = network_id
         self.dpid = dpid
@@ -76,6 +84,7 @@ class EventNetworkPort(event.EventBase):
 
 
 class EventMacAddress(event.EventBase):
+    self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
     """
     An event class for end-point MAC address registration.
 
@@ -97,6 +106,7 @@ class EventMacAddress(event.EventBase):
     """
 
     def __init__(self, dpid, port_no, network_id, mac_address, add_del):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         super(EventMacAddress, self).__init__()
         assert network_id is not None
         assert mac_address is not None
@@ -108,28 +118,35 @@ class EventMacAddress(event.EventBase):
 
 
 class Networks(dict):
+    self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
     "network_id -> set of (dpid, port_no)"
 
     def __init__(self, f):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         super(Networks, self).__init__()
         self.send_event = f
 
     def list_networks(self):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return list(self.keys())
 
     def has_network(self, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return network_id in self
 
     def update_network(self, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         self.setdefault(network_id, set())
 
     def create_network(self, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         if network_id in self:
             raise NetworkAlreadyExist(network_id=network_id)
 
         self[network_id] = set()
 
     def remove_network(self, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         try:
             ports = self[network_id]
         except KeyError:
@@ -142,6 +159,7 @@ class Networks(dict):
             self.send_event(EventNetworkDel(network_id))
 
     def list_ports(self, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         try:
             # use list() to keep compatibility for output
             # set() isn't json serializable
@@ -150,9 +168,11 @@ class Networks(dict):
             raise NetworkNotFound(network_id=network_id)
 
     def add_raw(self, network_id, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         self[network_id].add((dpid, port_no))
 
     def add_event(self, network_id, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         self.send_event(
             EventNetworkPort(network_id, dpid, port_no, True))
 
@@ -161,15 +181,18 @@ class Networks(dict):
     #     self.add_event(network_id, dpid, port_no)
 
     def _remove_event(self, network_id, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         self.send_event(EventNetworkPort(network_id, dpid, port_no, False))
 
     def remove_raw(self, network_id, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         ports = self[network_id]
         if (dpid, port_no) in ports:
             ports.remove((dpid, port_no))
             self._remove_event(network_id, dpid, port_no)
 
     def remove(self, network_id, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         try:
             self.remove_raw(network_id, dpid, port_no)
         except KeyError:
@@ -192,7 +215,9 @@ class Networks(dict):
 
 
 class Port(object):
+    self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
     def __init__(self, port_no, network_id, mac_address=None):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         super(Port, self).__init__()
         self.port_no = port_no
         self.network_id = network_id
@@ -200,29 +225,36 @@ class Port(object):
 
 
 class DPIDs(dict):
+    self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
     """dpid -> port_no -> Port(port_no, network_id, mac_address)"""
 
     def __init__(self, f, nw_id_unknown):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         super(DPIDs, self).__init__()
         self.send_event = f
         self.nw_id_unknown = nw_id_unknown
 
     def setdefault_dpid(self, dpid):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return self.setdefault(dpid, {})
 
     def _setdefault_network(self, dpid, port_no, default_network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         dp = self.setdefault_dpid(dpid)
         return dp.setdefault(port_no, Port(port_no=port_no,
                                            network_id=default_network_id))
 
     def setdefault_network(self, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         self._setdefault_network(dpid, port_no, self.nw_id_unknown)
 
     def update_port(self, dpid, port_no, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         port = self._setdefault_network(dpid, port_no, network_id)
         port.network_id = network_id
 
     def remove_port(self, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         try:
             # self.dpids[dpid][port_no] can be already deleted by
             # port_deleted()
@@ -236,6 +268,7 @@ class DPIDs(dict):
             raise PortNotFound(dpid=dpid, port=port_no, network_id=None)
 
     def get_ports(self, dpid, network_id=None, mac_address=None):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         if network_id is None:
             return list(self.get(dpid, {}).values())
         if mac_address is None:
@@ -247,31 +280,37 @@ class DPIDs(dict):
                 if p.network_id == network_id and p.mac_address == mac_address]
 
     def get_port(self, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         try:
             return self[dpid][port_no]
         except KeyError:
             raise PortNotFound(dpid=dpid, port=port_no, network_id=None)
 
     def get_network(self, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         try:
             return self[dpid][port_no].network_id
         except KeyError:
             raise PortUnknown(dpid=dpid, port=port_no)
 
     def get_networks(self, dpid):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return set(self[dpid].values())
 
     def get_network_safe(self, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         port = self.get(dpid, {}).get(port_no)
         if port is None:
             return self.nw_id_unknown
         return port.network_id
 
     def get_mac(self, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         port = self.get_port(dpid, port_no)
         return port.mac_address
 
     def _set_mac(self, network_id, dpid, port_no, port, mac_address):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         if not (port.network_id is None or
                 port.network_id == network_id or
                 port.network_id == self.nw_id_unknown):
@@ -285,6 +324,7 @@ class DPIDs(dict):
                             True))
 
     def set_mac(self, network_id, dpid, port_no, mac_address):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         port = self.get_port(dpid, port_no)
         if port.mac_address is not None:
             raise MacAddressAlreadyExist(dpid=dpid, port=port_no,
@@ -292,6 +332,7 @@ class DPIDs(dict):
         self._set_mac(network_id, dpid, port_no, port, mac_address)
 
     def update_mac(self, network_id, dpid, port_no, mac_address):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         port = self.get_port(dpid, port_no)
         if port.mac_address is None:
             self._set_mac(network_id, dpid, port_no, port, mac_address)
@@ -307,15 +348,19 @@ MacPort = collections.namedtuple('MacPort', ('dpid', 'port_no'))
 
 
 class MacToPort(collections.defaultdict):
+    self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
     """mac_address -> set of MacPort(dpid, port_no)"""
 
     def __init__(self):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         super(MacToPort, self).__init__(set)
 
     def add_port(self, dpid, port_no, mac_address):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         self[mac_address].add(MacPort(dpid, port_no))
 
     def remove_port(self, dpid, port_no, mac_address):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         ports = self[mac_address]
         ports.discard(MacPort(dpid, port_no))
         if not ports:
@@ -326,13 +371,16 @@ class MacToPort(collections.defaultdict):
 
 
 class MacAddresses(dict):
+    self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
     """network_id -> mac_address -> set of (dpid, port_no)"""
 
     def add_port(self, network_id, dpid, port_no, mac_address):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         mac2port = self.setdefault(network_id, MacToPort())
         mac2port.add_port(dpid, port_no, mac_address)
 
     def remove_port(self, network_id, dpid, port_no, mac_address):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         mac2port = self.get(network_id)
         if mac2port is None:
             return
@@ -341,6 +389,7 @@ class MacAddresses(dict):
             del self[network_id]
 
     def get_ports(self, network_id, mac_address):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         mac2port = self.get(network_id)
         if not mac2port:
             return set()
@@ -348,7 +397,9 @@ class MacAddresses(dict):
 
 
 class Network(app_manager.OSKenApp):
+    self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
     def __init__(self, nw_id_unknown=NW_ID_UNKNOWN):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         super(Network, self).__init__()
         self.name = 'network'
         self.nw_id_unknown = nw_id_unknown
@@ -357,33 +408,41 @@ class Network(app_manager.OSKenApp):
         self.mac_addresses = MacAddresses()
 
     def _check_nw_id_unknown(self, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         if network_id == self.nw_id_unknown:
             raise NetworkAlreadyExist(network_id=network_id)
 
     def list_networks(self):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return self.networks.list_networks()
 
     def update_network(self, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         self._check_nw_id_unknown(network_id)
         self.networks.update_network(network_id)
 
     def create_network(self, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         self._check_nw_id_unknown(network_id)
         self.networks.create_network(network_id)
 
     def remove_network(self, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         self.networks.remove_network(network_id)
 
     def list_ports(self, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return self.networks.list_ports(network_id)
 
     def list_ports_noraise(self, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         try:
             return self.list_ports(network_id)
         except NetworkNotFound:
             return []
 
     def _update_port(self, network_id, dpid, port, port_may_exist):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         def _known_nw_id(nw_id):
             return nw_id is not None and nw_id != self.nw_id_unknown
 
@@ -410,12 +469,15 @@ class Network(app_manager.OSKenApp):
             self.networks.add_event(network_id, dpid, port)
 
     def create_port(self, network_id, dpid, port):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         self._update_port(network_id, dpid, port, False)
 
     def update_port(self, network_id, dpid, port):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         self._update_port(network_id, dpid, port, True)
 
     def _get_old_mac(self, network_id, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         try:
             port = self.dpids.get_port(dpid, port_no)
         except PortNotFound:
@@ -426,6 +488,7 @@ class Network(app_manager.OSKenApp):
         return None
 
     def remove_port(self, network_id, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         # generate event first, then do the real task
         old_mac_address = self._get_old_mac(network_id, dpid, port_no)
 
@@ -445,19 +508,24 @@ class Network(app_manager.OSKenApp):
     #
 
     def get_dpids(self, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return self.networks.get_dpids(network_id)
 
     def has_network(self, network_id):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return self.networks.has_network(network_id)
 
     def get_networks(self, dpid):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return self.dpids.get_networks(dpid)
 
     def create_mac(self, network_id, dpid, port_no, mac_address):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         self.mac_addresses.add_port(network_id, dpid, port_no, mac_address)
         self.dpids.set_mac(network_id, dpid, port_no, mac_address)
 
     def update_mac(self, network_id, dpid, port_no, mac_address):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         old_mac_address = self._get_old_mac(network_id, dpid, port_no)
 
         self.dpids.update_mac(network_id, dpid, port_no, mac_address)
@@ -467,21 +535,26 @@ class Network(app_manager.OSKenApp):
         self.mac_addresses.add_port(network_id, dpid, port_no, mac_address)
 
     def get_mac(self, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return self.dpids.get_mac(dpid, port_no)
 
     def list_mac(self, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         mac_address = self.dpids.get_mac(dpid, port_no)
         if mac_address is None:
             return []
         return [mac_address]
 
     def get_ports(self, dpid, network_id=None, mac_address=None):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return self.dpids.get_ports(dpid, network_id, mac_address)
 
     def get_port(self, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return self.dpids.get_port(dpid, port_no)
 
     def get_ports_with_mac(self, network_id, mac_address):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return self.mac_addresses.get_ports(network_id, mac_address)
 
     #
@@ -489,6 +562,7 @@ class Network(app_manager.OSKenApp):
     #
 
     def same_network(self, dpid, nw_id, out_port, allow_nw_id_external=None):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         assert nw_id != self.nw_id_unknown
         out_nw = self.dpids.get_network_safe(dpid, out_port)
 
@@ -507,9 +581,11 @@ class Network(app_manager.OSKenApp):
         return False
 
     def get_network(self, dpid, port):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         return self.dpids.get_network(dpid, port)
 
     def add_datapath(self, ofp_switch_features):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         datapath = ofp_switch_features.datapath
         dpid = ofp_switch_features.datapath_id
         ports = ofp_switch_features.ports
@@ -518,6 +594,7 @@ class Network(app_manager.OSKenApp):
             self.port_added(datapath, port_no)
 
     def port_added(self, datapath, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         if port_no == 0 or port_no >= datapath.ofproto.OFPP_MAX:
             # skip fake output ports
             return
@@ -525,9 +602,11 @@ class Network(app_manager.OSKenApp):
         self.dpids.setdefault_network(datapath.id, port_no)
 
     def port_deleted(self, dpid, port_no):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         self.dpids.remove_port(dpid, port_no)
 
     def filter_ports(self, dpid, in_port, nw_id, allow_nw_id_external=None):
+        self.logger.info('processing: %s()', sys._getframe(0).f_code.co_name)
         assert nw_id != self.nw_id_unknown
         ret = []
 

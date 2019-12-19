@@ -50,14 +50,17 @@ def lookup_service_brick(name):
 
 
 def _lookup_service_brick_by_ev_cls(ev_cls):
+    LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
     return _lookup_service_brick_by_mod_name(ev_cls.__module__)
 
 
 def _lookup_service_brick_by_mod_name(mod_name):
+    LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
     return lookup_service_brick(mod_name.split('.')[-1])
 
 
 def register_app(app):
+    LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
     assert isinstance(app, OSKenApp)
     assert app.name not in SERVICE_BRICKS
     SERVICE_BRICKS[app.name] = app
@@ -65,10 +68,12 @@ def register_app(app):
 
 
 def unregister_app(app):
+    LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
     SERVICE_BRICKS.pop(app.name)
 
 
 def require_app(app_name, api_style=False):
+    LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
     """
     Request the application to be automatically loaded.
 
@@ -89,6 +94,7 @@ def require_app(app_name, api_style=False):
 
 
 class OSKenApp(object):
+    LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
     """
     The base class for OSKen applications.
 
@@ -145,12 +151,14 @@ class OSKenApp(object):
 
     @classmethod
     def context_iteritems(cls):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """
         Return iterator over the (key, contxt class) of application context
         """
         return iter(cls._CONTEXTS.items())
 
     def __init__(self, *_args, **_kwargs):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         super(OSKenApp, self).__init__()
         self.name = self.__class__.__name__
         self.event_handlers = {}        # ev_cls -> handlers:list
@@ -172,12 +180,14 @@ class OSKenApp(object):
         self.is_active = True
 
     def start(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """
         Hook that is called after startup initialization is done.
         """
         self.threads.append(hub.spawn(self._event_loop))
 
     def stop(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         if self.main_thread:
             hub.kill(self.main_thread)
         self.is_active = False
@@ -185,6 +195,7 @@ class OSKenApp(object):
         hub.joinall(self.threads)
 
     def set_main_thread(self, thread):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """
         Set self.main_thread so that stop() can terminate it.
 
@@ -193,40 +204,48 @@ class OSKenApp(object):
         self.main_thread = thread
 
     def register_handler(self, ev_cls, handler):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         assert callable(handler)
         self.event_handlers.setdefault(ev_cls, [])
         self.event_handlers[ev_cls].append(handler)
 
     def unregister_handler(self, ev_cls, handler):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         assert callable(handler)
         self.event_handlers[ev_cls].remove(handler)
         if not self.event_handlers[ev_cls]:
             del self.event_handlers[ev_cls]
 
     def register_observer(self, ev_cls, name, states=None):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         states = states or set()
         ev_cls_observers = self.observers.setdefault(ev_cls, {})
         ev_cls_observers.setdefault(name, set()).update(states)
 
     def unregister_observer(self, ev_cls, name):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         observers = self.observers.get(ev_cls, {})
         observers.pop(name)
 
     def unregister_observer_all_event(self, name):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         for observers in self.observers.values():
             observers.pop(name, None)
 
     def observe_event(self, ev_cls, states=None):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         brick = _lookup_service_brick_by_ev_cls(ev_cls)
         if brick is not None:
             brick.register_observer(ev_cls, self.name, states)
 
     def unobserve_event(self, ev_cls):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         brick = _lookup_service_brick_by_ev_cls(ev_cls)
         if brick is not None:
             brick.unregister_observer(ev_cls, self.name)
 
     def get_handlers(self, ev, state=None):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """Returns a list of handlers for the specific event.
 
         :param ev: The event to handle.
@@ -255,6 +274,7 @@ class OSKenApp(object):
         return filter(test, handlers)
 
     def get_observers(self, ev, state):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         observers = []
         for k, v in self.observers.get(ev.__class__, {}).items():
             if not state or not v or state in v:
@@ -263,6 +283,7 @@ class OSKenApp(object):
         return observers
 
     def send_request(self, req):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """
         Make a synchronous request.
         Set req.sync to True, send it to a OSKen application specified by
@@ -279,6 +300,7 @@ class OSKenApp(object):
         return req.reply_q.get()
 
     def _event_loop(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         while self.is_active or not self.events.empty():
             ev, state = self.events.get()
             self._events_sem.release()
@@ -299,10 +321,12 @@ class OSKenApp(object):
                                   self.name, handler.__name__, ev.__class__.__name__)
 
     def _send_event(self, ev, state):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         self._events_sem.acquire()
         self.events.put((ev, state))
 
     def send_event(self, name, ev, state=None):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """
         Send the specified event to the OSKenApp instance specified by name.
         """
@@ -318,6 +342,7 @@ class OSKenApp(object):
                       self.name, name, ev.__class__.__name__)
 
     def send_event_to_observers(self, ev, state=None):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """
         Send the specified event to all observers of this OSKenApp.
         """
@@ -326,6 +351,7 @@ class OSKenApp(object):
             self.send_event(observer, ev, state)
 
     def reply_to_request(self, req, rep):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """
         Send a reply for a synchronous request sent by send_request.
         The first argument should be an instance of EventRequestBase.
@@ -341,6 +367,7 @@ class OSKenApp(object):
             self.send_event(rep.dst, rep)
 
     def close(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """
         teardown method.
         The method name, close, is chosen for python context manager
@@ -349,11 +376,13 @@ class OSKenApp(object):
 
 
 class AppManager(object):
+    LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
     # singleton
     _instance = None
 
     @staticmethod
     def run_apps(app_lists):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         """Run a set of OSKen applications
 
         A convenient method to load and instantiate apps.
@@ -377,11 +406,13 @@ class AppManager(object):
 
     @staticmethod
     def get_instance():
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         if not AppManager._instance:
             AppManager._instance = AppManager()
         return AppManager._instance
 
     def __init__(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         self.applications_cls = {}
         self.applications = {}
         self.contexts_cls = {}
@@ -389,6 +420,7 @@ class AppManager(object):
         self.close_sem = hub.Semaphore()
 
     def load_app(self, name):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         mod = utils.import_module(name)
         clses = inspect.getmembers(mod,
                                    lambda cls: (inspect.isclass(cls) and
@@ -400,6 +432,7 @@ class AppManager(object):
         return None
 
     def load_apps(self, app_lists):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         app_lists = [app for app
                      in itertools.chain.from_iterable(app.split(',')
                                                       for app in app_lists)]
@@ -437,6 +470,7 @@ class AppManager(object):
                                   if s not in app_lists])
 
     def create_contexts(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         for key, cls in self.contexts_cls.items():
             if issubclass(cls, OSKenApp):
                 # hack for dpset
@@ -449,6 +483,7 @@ class AppManager(object):
         return self.contexts
 
     def _update_bricks(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         for i in SERVICE_BRICKS.values():
             for _k, m in inspect.getmembers(i, inspect.ismethod):
                 if not hasattr(m, 'callers'):
@@ -470,6 +505,7 @@ class AppManager(object):
 
     @staticmethod
     def _report_brick(name, app):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         LOG.debug("BRICK %s", name)
         for ev_cls, list_ in app.observers.items():
             LOG.debug("  PROVIDES %s TO %s", ev_cls.__name__, list_)
@@ -478,10 +514,12 @@ class AppManager(object):
 
     @staticmethod
     def report_bricks():
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         for brick, i in SERVICE_BRICKS.items():
             AppManager._report_brick(brick, i)
 
     def _instantiate(self, app_name, cls, *args, **kwargs):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         # for now, only single instance of a given module
         # Do we need to support multiple instances?
         # Yes, maybe for slicing.
@@ -499,12 +537,14 @@ class AppManager(object):
         return app
 
     def instantiate(self, cls, *args, **kwargs):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         app = self._instantiate(None, cls, *args, **kwargs)
         self._update_bricks()
         self._report_brick(app.name, app)
         return app
 
     def instantiate_apps(self, *args, **kwargs):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         for app_name, cls in self.applications_cls.items():
             self._instantiate(app_name, cls, *args, **kwargs)
 
@@ -521,11 +561,13 @@ class AppManager(object):
 
     @staticmethod
     def _close(app):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         close_method = getattr(app, 'close', None)
         if callable(close_method):
             close_method()
 
     def uninstantiate(self, name):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         app = self.applications.pop(name)
         unregister_app(app)
         for app_ in SERVICE_BRICKS.values():
@@ -537,6 +579,7 @@ class AppManager(object):
             app.logger.debug('%s events remains %d', app.name, events.qsize())
 
     def close(self):
+        LOG.info('%s() caller: %s()', sys._getframe(0).f_code.co_name, sys._getframe(1).f_code.co_name)
         def close_all(close_dict):
             for app in close_dict.values():
                 self._close(app)
