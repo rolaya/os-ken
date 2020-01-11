@@ -35,6 +35,7 @@ import ovs.db.schema
 import ovs.db.types
 import ovs.poller
 import ovs.json
+from os_ken import log_utils
 from ovs import jsonrpc
 from ovs import ovsuuid
 from ovs import stream
@@ -50,6 +51,7 @@ LOG = logging.getLogger(__name__)       # use ovs.vlog?
 
 
 def valid_ovsdb_addr(addr):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
     """
     Returns True if the given addr is valid OVSDB server address, otherwise
     False.
@@ -86,6 +88,7 @@ def valid_ovsdb_addr(addr):
 
 # for debug
 def ovsrec_row_changes_to_string(ovsrec_row):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
     if not ovsrec_row._changes:
         return ovsrec_row._changes
 
@@ -95,6 +98,7 @@ def ovsrec_row_changes_to_string(ovsrec_row):
 
 # for debug
 def ovsrec_row_to_string(ovsrec_row):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
     output = ''
     output += 'uuid: %s ' % ovsrec_row.uuid
     if ovsrec_row._data:
@@ -107,6 +111,7 @@ def ovsrec_row_to_string(ovsrec_row):
 
 
 def atom_from_string(base, value_string, symtab=None):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
     type_ = base.type
     atom = None
     if type_ == ovs.db.types.IntegerType:
@@ -138,6 +143,7 @@ def atom_from_string(base, value_string, symtab=None):
 
 
 def datum_from_string(type_, value_string, symtab=None):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
     value_string = value_string.strip()
     if type_.is_map():
         if value_string.startswith('{'):
@@ -181,8 +187,10 @@ def vsctl_fatal(msg):
 
 
 class VSCtlBridge(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     def __init__(self, ovsrec_bridge, name, parent, vlan):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(VSCtlBridge, self).__init__()
         self.br_cfg = ovsrec_bridge
         self.name = name
@@ -196,8 +204,10 @@ class VSCtlBridge(object):
 
 
 class VSCtlPort(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     def __init__(self, vsctl_bridge_parent, ovsrec_port):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(VSCtlPort, self).__init__()
         self.bridge = weakref.ref(vsctl_bridge_parent)  # backpointer
         self.port_cfg = ovsrec_port
@@ -207,16 +217,20 @@ class VSCtlPort(object):
 
 
 class VSCtlIface(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     def __init__(self, vsctl_port_parent, ovsrec_iface):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(VSCtlIface, self).__init__()
         self.port = weakref.ref(vsctl_port_parent)      # backpointer
         self.iface_cfg = ovsrec_iface
 
 
 class VSCtlQoS(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     def __init__(self, vsctl_port_parent, ovsrec_qos):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(VSCtlQoS, self).__init__()
         self.port = weakref.ref(vsctl_port_parent)
         self.qos_cfg = ovsrec_qos
@@ -224,22 +238,27 @@ class VSCtlQoS(object):
 
 
 class VSCtlQueue(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     def __init__(self, vsctl_qos_parent, ovsrec_queue):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(VSCtlQueue, self).__init__()
         self.qos = weakref.ref(vsctl_qos_parent)
         self.queue_cfg = ovsrec_queue
 
 
 class VSCtlContext(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     def _invalidate_cache(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self.cache_valid = False
         self.bridges.clear()
         self.ports.clear()
         self.ifaces.clear()
 
     def __init__(self, idl_, txn, ovsrec_open_vswitch):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(VSCtlContext, self).__init__()
 
         # Modifiable state
@@ -259,12 +278,15 @@ class VSCtlContext(object):
         self.try_again = False  # used by wait-until command
 
     def done(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._invalidate_cache()
 
     def verify_bridges(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self.ovs.verify(vswitch_idl.OVSREC_OPEN_VSWITCH_COL_BRIDGES)
 
     def verify_ports(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if self.verified_ports:
             return
 
@@ -278,6 +300,7 @@ class VSCtlContext(object):
         self.verified_ports = True
 
     def add_bridge_to_cache(self, ovsrec_bridge, name, parent, vlan):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         vsctl_bridge = VSCtlBridge(ovsrec_bridge, name, parent, vlan)
         if parent:
             parent.children.add(vsctl_bridge)
@@ -285,6 +308,7 @@ class VSCtlContext(object):
         return vsctl_bridge
 
     def del_cached_bridge(self, vsctl_bridge):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         assert not vsctl_bridge.ports
         assert not vsctl_bridge.children
 
@@ -300,11 +324,13 @@ class VSCtlContext(object):
         del self.bridges[vsctl_bridge.name]
 
     def del_cached_qos(self, vsctl_qos):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         vsctl_qos.port().qos = None
         vsctl_qos.port = None
         vsctl_qos.queues = None
 
     def add_port_to_cache(self, vsctl_bridge_parent, ovsrec_port):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         tag = getattr(ovsrec_port, vswitch_idl.OVSREC_PORT_COL_TAG, None)
         if isinstance(tag, list):
             if len(tag) == 0:
@@ -322,6 +348,7 @@ class VSCtlContext(object):
         return vsctl_port
 
     def del_cached_port(self, vsctl_port):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         assert not vsctl_port.ifaces
         vsctl_port.bridge().ports.remove(vsctl_port)
         vsctl_port.bridge = None
@@ -330,35 +357,42 @@ class VSCtlContext(object):
         vsctl_port.port_cfg.delete()
 
     def add_iface_to_cache(self, vsctl_port_parent, ovsrec_iface):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         vsctl_iface = VSCtlIface(vsctl_port_parent, ovsrec_iface)
         vsctl_port_parent.ifaces.add(vsctl_iface)
         self.ifaces[ovsrec_iface.name] = vsctl_iface
 
     def add_qos_to_cache(self, vsctl_port_parent, ovsrec_qos):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         vsctl_qos = VSCtlQoS(vsctl_port_parent, ovsrec_qos)
         vsctl_port_parent.qos = vsctl_qos
         return vsctl_qos
 
     def add_queue_to_cache(self, vsctl_qos_parent, ovsrec_queue):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         vsctl_queue = VSCtlQueue(vsctl_qos_parent, ovsrec_queue)
         vsctl_qos_parent.queues.add(vsctl_queue)
 
     def del_cached_iface(self, vsctl_iface):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         vsctl_iface.port().ifaces.remove(vsctl_iface)
         vsctl_iface.port = None
         del self.ifaces[vsctl_iface.iface_cfg.name]
         vsctl_iface.iface_cfg.delete()
 
     def invalidate_cache(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if not self.cache_valid:
             return
         self._invalidate_cache()
 
     def populate_cache(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._populate_cache(self.idl.tables[vswitch_idl.OVSREC_TABLE_BRIDGE])
 
     @staticmethod
     def port_is_fake_bridge(ovsrec_port):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         tag = ovsrec_port.tag
         if isinstance(tag, list):
             if len(tag) == 0:
@@ -368,6 +402,7 @@ class VSCtlContext(object):
         return ovsrec_port.fake_bridge and 0 <= tag <= 4095
 
     def _populate_cache(self, ovsrec_bridges):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if self.cache_valid:
             return
         self.cache_valid = True
@@ -451,6 +486,7 @@ class VSCtlContext(object):
                         self.add_queue_to_cache(vsctl_qos, ovsrec_queue)
 
     def check_conflicts(self, name, msg):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self.verify_ports()
         if name in self.bridges:
             vsctl_fatal('%s because a bridge named %s already exists' %
@@ -465,6 +501,7 @@ class VSCtlContext(object):
                         (msg, name, self.ifaces[name].port().bridge().name))
 
     def find_bridge(self, name, must_exist):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         assert self.cache_valid
         vsctl_bridge = self.bridges.get(name)
         if must_exist and not vsctl_bridge:
@@ -473,12 +510,14 @@ class VSCtlContext(object):
         return vsctl_bridge
 
     def find_real_bridge(self, name, must_exist):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         vsctl_bridge = self.find_bridge(name, must_exist)
         if vsctl_bridge and vsctl_bridge.parent:
             vsctl_fatal('%s is a fake bridge' % name)
         return vsctl_bridge
 
     def find_bridge_by_id(self, datapath_id, must_exist):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         assert self.cache_valid
         for vsctl_bridge in self.bridges.values():
             if vsctl_bridge.br_cfg.datapath_id[0].strip('"') == datapath_id:
@@ -490,6 +529,7 @@ class VSCtlContext(object):
         return None
 
     def find_port(self, name, must_exist):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         assert self.cache_valid
         vsctl_port = self.ports.get(name)
         if vsctl_port and name == vsctl_port.bridge().name:
@@ -499,6 +539,7 @@ class VSCtlContext(object):
         return vsctl_port
 
     def find_iface(self, name, must_exist):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         assert self.cache_valid
         vsctl_iface = self.ifaces.get(name)
         if vsctl_iface and name == vsctl_iface.port().bridge().name:
@@ -509,6 +550,7 @@ class VSCtlContext(object):
         return vsctl_iface
 
     def set_qos(self, vsctl_port, type, max_rate):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         qos = vsctl_port.qos.qos_cfg
         if not len(qos):
             ovsrec_qos = self.txn.insert(
@@ -525,6 +567,7 @@ class VSCtlContext(object):
 
     def set_queue(self, vsctl_qos, max_rate, min_rate,
                   queue_id):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
         ovsrec_qos = vsctl_qos.qos_cfg[0]
         try:
@@ -545,17 +588,20 @@ class VSCtlContext(object):
 
     @staticmethod
     def _column_set(ovsrec_row, column, ovsrec_value):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         # need to trigger Row.__setattr__()
         setattr(ovsrec_row, column, ovsrec_value)
 
     @staticmethod
     def _column_insert(ovsrec_row, column, ovsrec_add):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         value = getattr(ovsrec_row, column)
         value.append(ovsrec_add)
         VSCtlContext._column_set(ovsrec_row, column, value)
 
     @staticmethod
     def _column_delete(ovsrec_row, column, ovsrec_del):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         value = getattr(ovsrec_row, column)
         try:
             value.remove(ovsrec_del)
@@ -569,33 +615,39 @@ class VSCtlContext(object):
 
     @staticmethod
     def bridge_insert_port(ovsrec_bridge, ovsrec_port):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         VSCtlContext._column_insert(ovsrec_bridge,
                                     vswitch_idl.OVSREC_BRIDGE_COL_PORTS,
                                     ovsrec_port)
 
     @staticmethod
     def bridge_delete_port(ovsrec_bridge, ovsrec_port):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         VSCtlContext._column_delete(ovsrec_bridge,
                                     vswitch_idl.OVSREC_BRIDGE_COL_PORTS,
                                     ovsrec_port)
 
     @staticmethod
     def port_delete_qos(ovsrec_port, ovsrec_qos):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         VSCtlContext._column_delete(ovsrec_port,
                                     vswitch_idl.OVSREC_PORT_COL_QOS,
                                     ovsrec_qos)
 
     def ovs_insert_bridge(self, ovsrec_bridge):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._column_insert(self.ovs,
                             vswitch_idl.OVSREC_OPEN_VSWITCH_COL_BRIDGES,
                             ovsrec_bridge)
 
     def ovs_delete_bridge(self, ovsrec_bridge):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._column_delete(self.ovs,
                             vswitch_idl.OVSREC_OPEN_VSWITCH_COL_BRIDGES,
                             ovsrec_bridge)
 
     def del_port(self, vsctl_port):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if vsctl_port.bridge().parent:
             ovsrec_bridge = vsctl_port.bridge().parent.br_cfg
         else:
@@ -607,6 +659,7 @@ class VSCtlContext(object):
         self.del_cached_port(vsctl_port)
 
     def del_bridge(self, vsctl_bridge):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         for child in vsctl_bridge.children.copy():
             self.del_bridge(child)
         for vsctl_port in vsctl_bridge.ports.copy():
@@ -614,6 +667,7 @@ class VSCtlContext(object):
         self.del_cached_bridge(vsctl_bridge)
 
     def del_qos(self, vsctl_qos):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ovsrec_port = vsctl_qos.port().port_cfg
         ovsrec_qos = vsctl_qos.qos_cfg
         if len(ovsrec_qos):
@@ -622,6 +676,7 @@ class VSCtlContext(object):
 
     def add_port(self, br_name, port_name, may_exist, fake_iface,
                  iface_names, settings=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         :type settings: list of (column, value_json)
                                 where column is str,
@@ -685,6 +740,7 @@ class VSCtlContext(object):
             self.add_iface_to_cache(vsctl_port, ovsrec_iface)
 
     def add_bridge(self, br_name, parent_name=None, vlan=0, may_exist=False):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self.populate_cache()
         if may_exist:
             vsctl_bridge = self.find_bridge(br_name, False)
@@ -757,6 +813,7 @@ class VSCtlContext(object):
 
     @staticmethod
     def parse_column_key(setting_string):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Parses 'setting_string' as str formatted in <column>[:<key>]
         and returns str type 'column' and 'key'
@@ -773,6 +830,7 @@ class VSCtlContext(object):
 
     @staticmethod
     def parse_column_key_value(table_schema, setting_string):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Parses 'setting_string' as str formatted in <column>[:<key>]=<value>
         and returns str type 'column' and json formatted 'value'
@@ -795,6 +853,7 @@ class VSCtlContext(object):
         return column, value
 
     def get_column(self, ovsrec_row, column, key=None, if_exists=False):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         value = getattr(ovsrec_row, column, None)
         if isinstance(value, dict) and key is not None:
             value = value.get(key, None)
@@ -809,6 +868,7 @@ class VSCtlContext(object):
         return value
 
     def _pre_mod_column(self, ovsrec_row, column, value_json):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if column not in ovsrec_row._table.columns:
             vsctl_fatal('%s does not contain a column whose name matches "%s"'
                         % (ovsrec_row._table.name, column))
@@ -819,6 +879,7 @@ class VSCtlContext(object):
         return datum.to_python(ovs.db.idl._uuid_to_row)
 
     def set_column(self, ovsrec_row, column, value_json):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         column_schema = ovsrec_row._table.columns[column]
         datum = self._pre_mod_column(ovsrec_row, column, value_json)
 
@@ -831,6 +892,7 @@ class VSCtlContext(object):
         setattr(ovsrec_row, column, values)
 
     def add_column(self, ovsrec_row, column, value_json):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         column_schema = ovsrec_row._table.columns[column]
         datum = self._pre_mod_column(ovsrec_row, column, value_json)
 
@@ -846,6 +908,7 @@ class VSCtlContext(object):
         setattr(ovsrec_row, column, values)
 
     def remove_column(self, ovsrec_row, column, value_json):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         column_schema = ovsrec_row._table.columns[column]
         datum = self._pre_mod_column(ovsrec_row, column, value_json)
 
@@ -870,6 +933,7 @@ class VSCtlContext(object):
                 setattr(ovsrec_row, column, default)
 
     def _get_row_by_id(self, table_name, vsctl_row_id, record_id):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if not vsctl_row_id.table:
             return None
 
@@ -913,6 +977,7 @@ class VSCtlContext(object):
         return final
 
     def get_row(self, vsctl_table, record_id):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = vsctl_table.table_name
         if ovsuuid.is_valid_string(record_id):
             uuid = ovsuuid.from_string(record_id)
@@ -927,6 +992,7 @@ class VSCtlContext(object):
         return None
 
     def must_get_row(self, vsctl_table, record_id):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ovsrec_row = self.get_row(vsctl_table, record_id)
         if not ovsrec_row:
             vsctl_fatal('no row "%s" in table %s' % (record_id,
@@ -935,8 +1001,10 @@ class VSCtlContext(object):
 
 
 class _CmdShowTable(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     def __init__(self, table, name_column, columns, recurse):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(_CmdShowTable, self).__init__()
         self.table = table
         self.name_column = name_column
@@ -945,8 +1013,10 @@ class _CmdShowTable(object):
 
 
 class _VSCtlRowID(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     def __init__(self, table, name_column, uuid_column):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(_VSCtlRowID, self).__init__()
         self.table = table
         self.name_column = name_column
@@ -954,14 +1024,17 @@ class _VSCtlRowID(object):
 
 
 class _VSCtlTable(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     def __init__(self, table_name, vsctl_row_id_list):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(_VSCtlTable, self).__init__()
         self.table_name = table_name
         self.row_ids = vsctl_row_id_list
 
 
 class VSCtlCommand(StringifyMixin):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
     """
     Class to describe artgumens similar to those of ``ovs-vsctl`` command.
 
@@ -992,6 +1065,7 @@ class VSCtlCommand(StringifyMixin):
     """
 
     def __init__(self, command, args=None, options=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(VSCtlCommand, self).__init__()
         self.command = command
         self.args = args or []
@@ -1009,6 +1083,7 @@ class VSCtlCommand(StringifyMixin):
 
 
 class VSCtl(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
     """
     A class to describe an Open vSwitch instance.
 
@@ -1018,6 +1093,7 @@ class VSCtl(object):
     """
 
     def _reset(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self.schema_helper = None
         self.ovs = None
         self.txn = None
@@ -1025,6 +1101,7 @@ class VSCtl(object):
         self.dry_run = False
 
     def __init__(self, remote):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(VSCtl, self).__init__()
         self.remote = remote
 
@@ -1037,6 +1114,7 @@ class VSCtl(object):
         self.dry_run = False
 
     def _rpc_get_schema_json(self, database):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         LOG.debug('remote %s', self.remote)
         error, stream_ = stream.Stream.open_block(
             stream.Stream.open(self.remote))
@@ -1054,6 +1132,7 @@ class VSCtl(object):
         return reply.result
 
     def _init_schema_helper(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if self.schema_json is None:
             self.schema_json = self._rpc_get_schema_json(
                 vswitch_idl.OVSREC_DB_NAME)
@@ -1075,6 +1154,7 @@ class VSCtl(object):
             VSCtl._idl_block(idl_)
 
     def _run_prerequisites(self, commands):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         schema_helper = self.schema_helper
         schema_helper.register_table(vswitch_idl.OVSREC_TABLE_OPEN_VSWITCH)
         if self.wait_for_reload:
@@ -1091,6 +1171,7 @@ class VSCtl(object):
             ctx.done()
 
     def _do_vsctl(self, idl_, commands):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self.txn = idl.Transaction(idl_)
         if self.dry_run:
             self.txn.dry_run = True
@@ -1165,6 +1246,7 @@ class VSCtl(object):
         return True
 
     def _do_main(self, commands):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         :type commands: list of VSCtlCommand
         """
@@ -1190,6 +1272,7 @@ class VSCtl(object):
         idl_.close()
 
     def _run_command(self, commands):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         :type commands: list of VSCtlCommand
         """
@@ -1275,6 +1358,7 @@ class VSCtl(object):
         self._do_main(commands)
 
     def run_command(self, commands, timeout_sec=None, exception=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Executes the given commands and sends OVSDB messages.
 
@@ -1297,6 +1381,7 @@ class VSCtl(object):
     # Open vSwitch commands:
 
     def _cmd_init(self, _ctx, _command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         # nothing. Just check connection to ovsdb
         pass
 
@@ -1334,6 +1419,7 @@ class VSCtl(object):
     ]
 
     def _pre_cmd_show(self, _ctx, _command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         schema_helper = self.schema_helper
         for show in self._CMD_SHOW_TABLES:
             schema_helper.register_table(show.table)
@@ -1343,6 +1429,7 @@ class VSCtl(object):
 
     @staticmethod
     def _cmd_show_find_table_by_row(row):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         for show in VSCtl._CMD_SHOW_TABLES:
             if show.table == row._table.name:
                 return show
@@ -1350,6 +1437,7 @@ class VSCtl(object):
 
     @staticmethod
     def _cmd_show_find_table_by_name(name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         for show in VSCtl._CMD_SHOW_TABLES:
             if show.table == name:
                 return show
@@ -1357,6 +1445,7 @@ class VSCtl(object):
 
     @staticmethod
     def _cmd_show_row(ctx, row, level):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         _INDENT_SIZE = 4  # # of spaces per indent
         show = VSCtl._cmd_show_find_table_by_row(row)
         output = ''
@@ -1396,6 +1485,7 @@ class VSCtl(object):
         return output
 
     def _cmd_show(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         for row in ctx.idl.tables[
                 self._CMD_SHOW_TABLES[0].table].rows.values():
             output = self._cmd_show_row(ctx, row, 0)
@@ -1404,6 +1494,7 @@ class VSCtl(object):
     # Bridge commands:
 
     def _pre_get_info(self, _ctx, _command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         schema_helper = self.schema_helper
 
         schema_helper.register_columns(
@@ -1433,10 +1524,12 @@ class VSCtl(object):
             [])
 
     def _cmd_list_br(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         command.result = sorted(ctx.bridges.keys())
 
     def _pre_add_br(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._pre_get_info(ctx, command)
 
         schema_helper = self.schema_helper
@@ -1445,6 +1538,7 @@ class VSCtl(object):
             [vswitch_idl.OVSREC_INTERFACE_COL_TYPE])
 
     def _cmd_add_br(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         parent_name = None
         vlan = 0
@@ -1461,25 +1555,30 @@ class VSCtl(object):
         ctx.add_bridge(br_name, parent_name, vlan)
 
     def _del_br(self, ctx, br_name, must_exist=False):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         br = ctx.find_bridge(br_name, must_exist)
         if br:
             ctx.del_bridge(br)
 
     def _cmd_del_br(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         self._del_br(ctx, br_name)
 
     def _br_exists(self, ctx, br_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         br = ctx.find_bridge(br_name, must_exist=False)
         return br is not None
 
     def _cmd_br_exists(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         command.result = self._br_exists(ctx, br_name)
 
     def _br_to_vlan(self, ctx, br_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         br = ctx.find_bridge(br_name, must_exist=True)
         vlan = br.vlan
@@ -1491,24 +1590,29 @@ class VSCtl(object):
         return vlan
 
     def _cmd_br_to_vlan(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         command.result = self._br_to_vlan(ctx, br_name)
 
     def _br_to_parent(self, ctx, br_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         br = ctx.find_bridge(br_name, must_exist=True)
         return br if br.parent is None else br.parent
 
     def _cmd_br_to_parent(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         command.result = self._br_to_parent(ctx, br_name)
 
     def _pre_cmd_br_set_external_id(self, ctx, _command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = vswitch_idl.OVSREC_TABLE_BRIDGE
         columns = [vswitch_idl.OVSREC_BRIDGE_COL_EXTERNAL_IDS]
         self._pre_mod_columns(ctx, table_name, columns)
 
     def _br_add_external_id(self, ctx, br_name, key, value):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = vswitch_idl.OVSREC_TABLE_BRIDGE
         column = vswitch_idl.OVSREC_BRIDGE_COL_EXTERNAL_IDS
         vsctl_table = self._get_table(table_name)
@@ -1519,6 +1623,7 @@ class VSCtl(object):
         ctx.invalidate_cache()
 
     def _br_clear_external_id(self, ctx, br_name, key):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = vswitch_idl.OVSREC_TABLE_BRIDGE
         column = vswitch_idl.OVSREC_BRIDGE_COL_EXTERNAL_IDS
         vsctl_table = self._get_table(table_name)
@@ -1530,6 +1635,7 @@ class VSCtl(object):
         ctx.invalidate_cache()
 
     def _cmd_br_set_external_id(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         key = command.args[1]
         if len(command.args) > 2:
@@ -1538,16 +1644,19 @@ class VSCtl(object):
             self._br_clear_external_id(ctx, br_name, key)
 
     def _pre_cmd_br_get_external_id(self, ctx, _command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = vswitch_idl.OVSREC_TABLE_BRIDGE
         columns = [vswitch_idl.OVSREC_BRIDGE_COL_EXTERNAL_IDS]
         self._pre_get_columns(ctx, table_name, columns)
 
     def _br_get_external_id_value(self, ctx, br_name, key):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         external_id = self._br_get_external_id_list(ctx, br_name)
 
         return external_id.get(key, None)
 
     def _br_get_external_id_list(self, ctx, br_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = vswitch_idl.OVSREC_TABLE_BRIDGE
         column = vswitch_idl.OVSREC_BRIDGE_COL_EXTERNAL_IDS
         vsctl_table = self._get_table(table_name)
@@ -1556,6 +1665,7 @@ class VSCtl(object):
         return ctx.get_column(ovsrec_row, column)
 
     def _cmd_br_get_external_id(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         if len(command.args) > 1:
             command.result = self._br_get_external_id_value(ctx, br_name,
@@ -1566,6 +1676,7 @@ class VSCtl(object):
     # Port commands:
 
     def _list_ports(self, ctx, br_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         br = ctx.find_bridge(br_name, True)
         if br.br_cfg:
@@ -1577,11 +1688,13 @@ class VSCtl(object):
                 if port.port_cfg.name != br.name]
 
     def _cmd_list_ports(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         port_names = self._list_ports(ctx, br_name)
         command.result = sorted(port_names)
 
     def _pre_add_port(self, _ctx, columns):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         schema_helper = self.schema_helper
         schema_helper.register_columns(
             vswitch_idl.OVSREC_TABLE_PORT,
@@ -1591,6 +1704,7 @@ class VSCtl(object):
             vswitch_idl.OVSREC_TABLE_PORT, columns)
 
     def _pre_cmd_add_port(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._pre_get_info(ctx, command)
 
         columns = [
@@ -1601,6 +1715,7 @@ class VSCtl(object):
         self._pre_add_port(ctx, columns)
 
     def _pre_cmd_add_bond(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._pre_get_info(ctx, command)
 
         if len(command.args) < 3:
@@ -1614,6 +1729,7 @@ class VSCtl(object):
         self._pre_add_port(ctx, columns)
 
     def _cmd_add_port(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         # '--may_exist' is a typo but for backword compatibility
         may_exist = (command.has_option('--may_exist')
                      or command.has_option('--may-exist'))
@@ -1630,6 +1746,7 @@ class VSCtl(object):
                      False, iface_names, settings)
 
     def _cmd_add_bond(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         # '--may_exist' is a typo but for backword compatibility
         may_exist = (command.has_option('--may_exist')
                      or command.has_option('--may-exist'))
@@ -1648,6 +1765,7 @@ class VSCtl(object):
 
     def _del_port(self, ctx, br_name=None, target=None,
                   must_exist=False, with_iface=False):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         assert target is not None
 
         ctx.populate_cache()
@@ -1678,6 +1796,7 @@ class VSCtl(object):
         ctx.del_port(vsctl_port)
 
     def _cmd_del_port(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         must_exist = command.has_option('--must-exist')
         with_iface = command.has_option('--with-iface')
         target = command.args[-1]
@@ -1685,6 +1804,7 @@ class VSCtl(object):
         self._del_port(ctx, br_name, target, must_exist, with_iface)
 
     def _port_to_br(self, ctx, port_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         port = ctx.find_port(port_name, True)
         bridge = port.bridge()
@@ -1695,12 +1815,14 @@ class VSCtl(object):
         return bridge.name
 
     def _cmd_port_to_br(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         iface_name = command.args[0]
         command.result = self._iface_to_br(ctx, iface_name)
 
     # Interface commands:
 
     def _list_ifaces(self, ctx, br_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
 
         br = ctx.find_bridge(br_name, True)
@@ -1715,11 +1837,13 @@ class VSCtl(object):
         return iface_names
 
     def _cmd_list_ifaces(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         iface_names = self._list_ifaces(ctx, br_name)
         command.result = sorted(iface_names)
 
     def _iface_to_br(self, ctx, iface_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         iface = ctx.find_iface(iface_name, True)
         port = iface.port()
@@ -1734,12 +1858,14 @@ class VSCtl(object):
         return bridge.name
 
     def _cmd_iface_to_br(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         iface_name = command.args[0]
         command.result = self._iface_to_br(ctx, iface_name)
 
     # Utility commands for quantum_adapter:
 
     def _pre_cmd_list_ifaces_verbose(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._pre_get_info(ctx, command)
         schema_helper = self.schema_helper
         schema_helper.register_columns(
@@ -1755,6 +1881,7 @@ class VSCtl(object):
 
     @staticmethod
     def _iface_to_dict(iface_cfg):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         _ATTRIBUTE = ['name', 'ofport', 'type', 'external_ids', 'options']
         attr = dict((key, getattr(iface_cfg, key)) for key in _ATTRIBUTE)
 
@@ -1763,6 +1890,7 @@ class VSCtl(object):
         return attr
 
     def _list_ifaces_verbose(self, ctx, datapath_id, port_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
 
         br = ctx.find_bridge_by_id(datapath_id, True)
@@ -1785,6 +1913,7 @@ class VSCtl(object):
         return iface_cfgs
 
     def _cmd_list_ifaces_verbose(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         datapath_id = command.args[0]
         port_name = None
         if len(command.args) >= 2:
@@ -1796,32 +1925,38 @@ class VSCtl(object):
     # Controller commands:
 
     def _verify_controllers(self, ovsrec_bridge):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ovsrec_bridge.verify(vswitch_idl.OVSREC_BRIDGE_COL_CONTROLLER)
         for controller in ovsrec_bridge.controller:
             controller.verify(vswitch_idl.OVSREC_CONTROLLER_COL_TARGET)
 
     def _pre_controller(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._pre_get_info(ctx, command)
         self.schema_helper.register_columns(
             vswitch_idl.OVSREC_TABLE_CONTROLLER,
             [vswitch_idl.OVSREC_CONTROLLER_COL_TARGET])
 
     def _get_controller(self, ctx, br_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         br = ctx.find_bridge(br_name, True)
         self._verify_controllers(br.br_cfg)
         return set(controller.target for controller in br.br_cfg.controller)
 
     def _cmd_get_controller(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         controller_names = self._get_controller(ctx, br_name)
         command.result = sorted(controller_names)
 
     def _delete_controllers(self, ovsrec_controllers):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         for controller in ovsrec_controllers:
             controller.delete()
 
     def _del_controller(self, ctx, br_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         br = ctx.find_real_bridge(br_name, True)
         ovsrec_bridge = br.br_cfg
@@ -1831,10 +1966,12 @@ class VSCtl(object):
             ovsrec_bridge.controller = []
 
     def _cmd_del_controller(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         self._del_controller(ctx, br_name)
 
     def _insert_controllers(self, controller_names):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ovsrec_controllers = []
         for name in controller_names:
             # TODO: check if the name startswith() supported protocols
@@ -1845,12 +1982,14 @@ class VSCtl(object):
         return ovsrec_controllers
 
     def _insert_qos(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ovsrec_qos = self.txn.insert(
             self.txn.idl.tables[vswitch_idl.OVSREC_TABLE_QOS])
 
         return ovsrec_qos
 
     def _set_controller(self, ctx, br_name, controller_names):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         ovsrec_bridge = ctx.find_real_bridge(br_name, True).br_cfg
         self._verify_controllers(ovsrec_bridge)
@@ -1859,17 +1998,20 @@ class VSCtl(object):
         ovsrec_bridge.controller = controllers
 
     def _cmd_set_controller(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         controller_names = command.args[1:]
         self._set_controller(ctx, br_name, controller_names)
 
     def _pre_fail_mode(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._pre_get_info(ctx, command)
         self.schema_helper.register_columns(
             vswitch_idl.OVSREC_TABLE_BRIDGE,
             [vswitch_idl.OVSREC_BRIDGE_COL_FAIL_MODE])
 
     def _get_fail_mode(self, ctx, br_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         br = ctx.find_bridge(br_name, True)
 
@@ -1877,10 +2019,12 @@ class VSCtl(object):
         return getattr(br.br_cfg, vswitch_idl.OVSREC_BRIDGE_COL_FAIL_MODE)[0]
 
     def _cmd_get_fail_mode(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         command.result = self._get_fail_mode(ctx, br_name)
 
     def _del_fail_mode(self, ctx, br_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         br = ctx.find_bridge(br_name, True)
         # Note: assuming that [] means empty
@@ -1888,16 +2032,19 @@ class VSCtl(object):
         ctx.invalidate_cache()
 
     def _cmd_del_fail_mode(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         self._del_fail_mode(ctx, br_name)
 
     def _set_fail_mode(self, ctx, br_name, mode):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         br = ctx.find_bridge(br_name, True)
         setattr(br.br_cfg, vswitch_idl.OVSREC_BRIDGE_COL_FAIL_MODE, mode)
         ctx.invalidate_cache()
 
     def _cmd_set_fail_mode(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         br_name = command.args[0]
         mode = command.args[1]
         if mode not in ('standalone', 'secure'):
@@ -1907,6 +2054,7 @@ class VSCtl(object):
     # Utility commands:
 
     def _del_qos(self, ctx, port_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         assert port_name is not None
 
         ctx.populate_cache()
@@ -1915,16 +2063,19 @@ class VSCtl(object):
         ctx.del_qos(vsctl_qos)
 
     def _cmd_del_qos(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         port_name = command.args[0]
         self._del_qos(ctx, port_name)
 
     def _set_qos(self, ctx, port_name, type, max_rate):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         vsctl_port = ctx.find_port(port_name, True)
         ovsrec_qos = ctx.set_qos(vsctl_port, type, max_rate)
         return ovsrec_qos
 
     def _cmd_set_qos(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         port_name = command.args[0]
         type = command.args[1]
         max_rate = command.args[2]
@@ -1932,6 +2083,7 @@ class VSCtl(object):
         command.result = [result]
 
     def _pre_cmd_set_qos(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._pre_get_info(ctx, command)
         schema_helper = self.schema_helper
         schema_helper.register_columns(
@@ -1942,6 +2094,7 @@ class VSCtl(object):
              vswitch_idl.OVSREC_QOS_COL_TYPE])
 
     def _cmd_set_queue(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ctx.populate_cache()
         port_name = command.args[0]
         queues = command.args[1]
@@ -1959,6 +2112,7 @@ class VSCtl(object):
         command.result = results
 
     def _pre_cmd_set_queue(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._pre_get_info(ctx, command)
         schema_helper = self.schema_helper
         schema_helper.register_columns(
@@ -2026,6 +2180,7 @@ class VSCtl(object):
 
     @staticmethod
     def _score_partial_match(name, s):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         _MAX_SCORE = 0xffffffff
         assert len(name) < _MAX_SCORE
         s = s[:_MAX_SCORE - 1]  # in practice, this doesn't matter
@@ -2043,6 +2198,7 @@ class VSCtl(object):
 
     @staticmethod
     def _get_table(table_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         best_match = None
         best_score = 0
         for table in VSCtl._TABLES:
@@ -2061,6 +2217,7 @@ class VSCtl(object):
             vsctl_fatal('unknown table "%s"' % table_name)
 
     def _pre_get_table(self, _ctx, table_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         vsctl_table = self._get_table(table_name)
 
         schema_helper = self.schema_helper
@@ -2077,6 +2234,7 @@ class VSCtl(object):
         return vsctl_table
 
     def _get_column(self, table_name, column_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         best_match = None
         best_score = 0
 
@@ -2101,19 +2259,23 @@ class VSCtl(object):
                         '"%s"' % (table_name, column_name))
 
     def _pre_get_column(self, _ctx, table_name, column):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         column_name = self._get_column(table_name, column)
         self.schema_helper.register_columns(table_name, [column_name])
 
     def _pre_get_columns(self, ctx, table_name, columns):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._pre_get_table(ctx, table_name)
         for column in columns:
             self._pre_get_column(ctx, table_name, column)
 
     def _pre_cmd_list(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = command.args[0]
         self._pre_get_table(ctx, table_name)
 
     def _list(self, ctx, table_name, record_id=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         result = []
         for ovsrec_row in ctx.idl.tables[table_name].rows.values():
             if record_id is not None and ovsrec_row.name != record_id:
@@ -2123,6 +2285,7 @@ class VSCtl(object):
         return result
 
     def _cmd_list(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = command.args[0]
         record_id = None
         if len(command.args) > 1:
@@ -2131,6 +2294,7 @@ class VSCtl(object):
         command.result = self._list(ctx, table_name, record_id)
 
     def _pre_cmd_find(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = command.args[0]
         table_schema = self.schema.tables[table_name]
         columns = [
@@ -2140,6 +2304,7 @@ class VSCtl(object):
         self._pre_get_columns(ctx, table_name, columns)
 
     def _check_value(self, ovsrec_row, column_value):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         :type column_value: tuple of column and value_json
         """
@@ -2158,6 +2323,7 @@ class VSCtl(object):
         return False
 
     def _find(self, ctx, table_name, column_values):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         :type column_values: list of (column, value_json)
         """
@@ -2171,6 +2337,7 @@ class VSCtl(object):
         return result
 
     def _cmd_find(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = command.args[0]
         table_schema = self.schema.tables[table_name]
         column_values = [
@@ -2179,6 +2346,7 @@ class VSCtl(object):
         command.result = self._find(ctx, table_name, column_values)
 
     def _pre_cmd_get(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = command.args[0]
         columns = [
             ctx.parse_column_key(column_key)[0]
@@ -2188,6 +2356,7 @@ class VSCtl(object):
 
     def _get(self, ctx, table_name, record_id, column_keys,
              id_=None, if_exists=False):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         vsctl_table = self._get_table(table_name)
         ovsrec_row = ctx.must_get_row(vsctl_table, record_id)
 
@@ -2207,6 +2376,7 @@ class VSCtl(object):
         return result
 
     def _cmd_get(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         id_ = None  # TODO: Support --id option
         if_exists = command.has_option('--if-exists')
         table_name = command.args[0]
@@ -2220,18 +2390,21 @@ class VSCtl(object):
             ctx, table_name, record_id, column_keys, id_, if_exists)
 
     def _check_mutable(self, table_name, column):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         column_schema = self.schema.tables[table_name].columns[column]
         if not column_schema.mutable:
             vsctl_fatal('cannot modify read-only column %s in table %s' %
                         (column, table_name))
 
     def _pre_mod_columns(self, ctx, table_name, columns):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self._pre_get_table(ctx, table_name)
         for column in columns:
             self._pre_get_column(ctx, table_name, column)
             self._check_mutable(table_name, column)
 
     def _pre_cmd_set(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = command.args[0]
         table_schema = self.schema.tables[table_name]
         columns = [
@@ -2241,6 +2414,7 @@ class VSCtl(object):
         self._pre_mod_columns(ctx, table_name, columns)
 
     def _set(self, ctx, table_name, record_id, column_values):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         :type column_values: list of (column, value_json)
         """
@@ -2251,6 +2425,7 @@ class VSCtl(object):
         ctx.invalidate_cache()
 
     def _cmd_set(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = command.args[0]
         record_id = command.args[1]
 
@@ -2263,12 +2438,14 @@ class VSCtl(object):
         self._set(ctx, table_name, record_id, column_values)
 
     def _pre_cmd_add(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = command.args[0]
         columns = [command.args[2]]
 
         self._pre_mod_columns(ctx, table_name, columns)
 
     def _add(self, ctx, table_name, record_id, column_values):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         :type column_values: list of (column, value_json)
         """
@@ -2279,6 +2456,7 @@ class VSCtl(object):
         ctx.invalidate_cache()
 
     def _cmd_add(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = command.args[0]
         record_id = command.args[1]
         column = command.args[2]
@@ -2300,12 +2478,14 @@ class VSCtl(object):
         self._add(ctx, table_name, record_id, column_values)
 
     def _pre_cmd_remove(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = command.args[0]
         columns = [command.args[2]]
 
         self._pre_mod_columns(ctx, table_name, columns)
 
     def _remove(self, ctx, table_name, record_id, column_values):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         :type column_values: list of (column, value_json)
         """
@@ -2316,6 +2496,7 @@ class VSCtl(object):
         ctx.invalidate_cache()
 
     def _cmd_remove(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = command.args[0]
         record_id = command.args[1]
         column = command.args[2]
@@ -2337,11 +2518,13 @@ class VSCtl(object):
         self._remove(ctx, table_name, record_id, column_values)
 
     def _pre_cmd_clear(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = command.args[0]
         column = command.args[2]
         self._pre_mod_columns(ctx, table_name, [column])
 
     def _clear(self, ctx, table_name, record_id, column):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         vsctl_table = self._get_table(table_name)
         ovsrec_row = ctx.must_get_row(vsctl_table, record_id)
         column_schema = ctx.idl.tables[table_name].columns[column]
@@ -2357,6 +2540,7 @@ class VSCtl(object):
         ctx.invalidate_cache()
 
     def _cmd_clear(self, ctx, command):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         table_name = command.args[0]
         record_id = command.args[1]
         column = command.args[2]
@@ -2368,6 +2552,7 @@ class VSCtl(object):
 #
 
 def schema_print(schema_location, prefix):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
     prefix = prefix.upper()
 
     json = ovs.json.from_file(schema_location)
@@ -2392,6 +2577,7 @@ def schema_print(schema_location, prefix):
 
 
 def main():
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
     if len(sys.argv) <= 2:
         print('Usage: %s <schema file>' % sys.argv[0])
         print('e.g.:  %s vswitchd/vswitch.ovsschema' % sys.argv[0])

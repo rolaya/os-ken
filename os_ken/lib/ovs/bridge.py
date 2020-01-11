@@ -22,6 +22,7 @@ import functools
 import logging
 
 from os_ken import cfg
+from os_ken import log_utils
 import os_ken.exception as os_ken_exc
 import os_ken.lib.dpid as dpid_lib
 import os_ken.lib.ovs.vsctl as ovs_vsctl
@@ -37,12 +38,15 @@ CONF.register_opts([
 
 
 class OVSBridgeNotFound(os_ken_exc.OSKenException):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
     message = 'no bridge for datapath_id %(datapath_id)s'
 
 
 class VifPort(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     def __init__(self, port_name, ofport, vif_id, vif_mac, switch):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(VifPort, self).__init__()
         self.port_name = port_name
         self.ofport = ofport
@@ -51,6 +55,7 @@ class VifPort(object):
         self.switch = switch
 
     def __str__(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return ('iface-id=%s, '
                 'vif_mac=%s, '
                 'port_name=%s, '
@@ -63,8 +68,10 @@ class VifPort(object):
 
 
 class TunnelPort(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     def __init__(self, port_name, ofport, tunnel_type, local_ip, remote_ip):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(TunnelPort, self).__init__()
         self.port_name = port_name
         self.ofport = ofport
@@ -73,6 +80,7 @@ class TunnelPort(object):
         self.remote_ip = remote_ip
 
     def __eq__(self, other):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return (self.port_name == other.port_name and
                 self.ofport == other.ofport and
                 self.tunnel_type == other.tunnel_type and
@@ -80,6 +88,7 @@ class TunnelPort(object):
                 self.remote_ip == other.remote_ip)
 
     def __str__(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return ('port_name=%s, '
                 'ofport=%s, '
                 'type=%s, '
@@ -92,6 +101,7 @@ class TunnelPort(object):
 
 
 class OVSBridge(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
     """
     Class to provide wrapper utilities of :py:mod:`os_ken.lib.ovs.vsctl.VSCtl`
 
@@ -115,6 +125,7 @@ class OVSBridge(object):
 
     def __init__(self, CONF, datapath_id, ovsdb_addr, timeout=None,
                  exception=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(OVSBridge, self).__init__()
         self.datapath_id = datapath_id
         self.ovsdb_addr = ovsdb_addr
@@ -125,6 +136,7 @@ class OVSBridge(object):
         self.br_name = None
 
     def run_command(self, commands):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Executes the given commands and sends OVSDB messages.
 
@@ -137,6 +149,7 @@ class OVSBridge(object):
         self.vsctl.run_command(commands, self.timeout, self.exception)
 
     def init(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Validates the given ``ovsdb_addr`` and connects to OVS instance.
 
@@ -150,6 +163,7 @@ class OVSBridge(object):
             self.br_name = self._get_bridge_name()
 
     def _get_bridge_name(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """ get Bridge name of a given 'datapath_id' """
         command = ovs_vsctl.VSCtlCommand(
             'find',
@@ -162,6 +176,7 @@ class OVSBridge(object):
         return command.result[0].name
 
     def get_controller(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Gets the configured OpenFlow controller address.
 
@@ -175,6 +190,7 @@ class OVSBridge(object):
         return result[0] if len(result) == 1 else result
 
     def set_controller(self, controllers):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Sets the OpenFlow controller address.
 
@@ -187,6 +203,7 @@ class OVSBridge(object):
         self.run_command([command])
 
     def del_controller(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Deletes the configured OpenFlow controller address.
 
@@ -198,6 +215,7 @@ class OVSBridge(object):
         self.run_command([command])
 
     def list_db_attributes(self, table, record=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Lists 'record' (or all records) in 'table'.
 
@@ -212,6 +230,7 @@ class OVSBridge(object):
         return []
 
     def find_db_attributes(self, table, *conditions):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Lists records satisfying 'conditions' in 'table'.
 
@@ -233,6 +252,7 @@ class OVSBridge(object):
         return []
 
     def get_db_attribute(self, table, record, column, key=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Gets values of 'column' in 'record' in 'table'.
 
@@ -250,6 +270,7 @@ class OVSBridge(object):
         return None
 
     def set_db_attribute(self, table, record, column, value, key=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Sets 'value' into 'column' in 'record' in 'table'.
 
@@ -264,6 +285,7 @@ class OVSBridge(object):
         self.run_command([command])
 
     def add_db_attribute(self, table, record, column, value, key=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Adds ('key'=)'value' into 'column' in 'record' in 'table'.
 
@@ -278,6 +300,7 @@ class OVSBridge(object):
         self.run_command([command])
 
     def remove_db_attribute(self, table, record, column, value, key=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Removes ('key'=)'value' into 'column' in 'record' in 'table'.
 
@@ -292,6 +315,7 @@ class OVSBridge(object):
         self.run_command([command])
 
     def clear_db_attribute(self, table, record, column):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Clears values from 'column' in 'record' in 'table'.
 
@@ -303,6 +327,7 @@ class OVSBridge(object):
         self.run_command([command])
 
     def db_get_val(self, table, record, column):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Gets values of 'column' in 'record' in 'table'.
 
@@ -316,6 +341,7 @@ class OVSBridge(object):
         return command.result[0]
 
     def db_get_map(self, table, record, column):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Gets dict type value of 'column' in 'record' in 'table'.
 
@@ -328,6 +354,7 @@ class OVSBridge(object):
         return val
 
     def get_datapath_id(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Gets Datapath ID of OVS instance.
 
@@ -338,6 +365,7 @@ class OVSBridge(object):
         return self.db_get_val('Bridge', self.br_name, 'datapath_id')
 
     def delete_port(self, port_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Deletes a port on the OVS instance.
 
@@ -350,6 +378,7 @@ class OVSBridge(object):
         self.run_command([command])
 
     def get_ofport(self, port_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Gets the OpenFlow port number.
 
@@ -362,6 +391,7 @@ class OVSBridge(object):
         return int(ofport_list[0])
 
     def get_port_name_list(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Gets a list of all ports on OVS instance.
 
@@ -374,6 +404,7 @@ class OVSBridge(object):
         return command.result
 
     def add_bond(self, name, ifaces, bond_mode=None, lacp=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Creates a bonded port.
 
@@ -397,6 +428,7 @@ class OVSBridge(object):
 
     def add_tunnel_port(self, name, tunnel_type, remote_ip,
                         local_ip=None, key=None, ofport=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Creates a tunnel port.
 
@@ -424,6 +456,7 @@ class OVSBridge(object):
 
     def add_gre_port(self, name, remote_ip,
                      local_ip=None, key=None, ofport=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Creates a GRE tunnel port.
 
@@ -434,6 +467,7 @@ class OVSBridge(object):
 
     def add_vxlan_port(self, name, remote_ip,
                        local_ip=None, key=None, ofport=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Creates a VxLAN tunnel port.
 
@@ -443,6 +477,7 @@ class OVSBridge(object):
                              local_ip=local_ip, key=key, ofport=ofport)
 
     def del_port(self, port_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Deletes a port on OVS instance.
 
@@ -454,6 +489,7 @@ class OVSBridge(object):
         self.run_command([command])
 
     def _get_ports(self, get_port):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ports = []
         port_names = self.get_port_name_list()
         for name in port_names:
@@ -466,20 +502,24 @@ class OVSBridge(object):
         return ports
 
     def _vifport(self, name, external_ids):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ofport = self.get_ofport(name)
         return VifPort(name, ofport, external_ids['iface-id'],
                        external_ids['attached-mac'], self)
 
     def _get_vif_port(self, name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         external_ids = self.db_get_map('Interface', name, 'external_ids')
         if 'iface-id' in external_ids and 'attached-mac' in external_ids:
             return self._vifport(name, external_ids)
 
     def get_vif_ports(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """ Returns a VIF object for each VIF port """
         return self._get_ports(self._get_vif_port)
 
     def _get_external_port(self, name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         # exclude vif ports
         external_ids = self.db_get_map('Interface', name, 'external_ids')
         if external_ids:
@@ -494,9 +534,11 @@ class OVSBridge(object):
         return VifPort(name, ofport, None, None, self)
 
     def get_external_ports(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._get_ports(self._get_external_port)
 
     def get_tunnel_port(self, name, tunnel_type='gre'):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         type_ = self.db_get_val('Interface', name, 'type')
         if type_ != tunnel_type:
             return
@@ -508,11 +550,13 @@ class OVSBridge(object):
                               options['local_ip'], options['remote_ip'])
 
     def get_tunnel_ports(self, tunnel_type='gre'):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         get_tunnel_port = functools.partial(self.get_tunnel_port,
                                             tunnel_type=tunnel_type)
         return self._get_ports(get_tunnel_port)
 
     def get_quantum_ports(self, port_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         LOG.debug('port_name %s', port_name)
         command = ovs_vsctl.VSCtlCommand(
             'list-ifaces-verbose',
@@ -523,6 +567,7 @@ class OVSBridge(object):
         return None
 
     def set_qos(self, port_name, type='linux-htb', max_rate=None, queues=None):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Sets a Qos rule and creates Queues on the given port.
         """
@@ -539,6 +584,7 @@ class OVSBridge(object):
         return None
 
     def del_qos(self, port_name):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         """
         Deletes the Qos rule on the given port.
         """

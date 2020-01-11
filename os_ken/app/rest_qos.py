@@ -18,6 +18,7 @@ import logging
 import json
 import re
 
+from os_ken import log_utils
 from os_ken.app import conf_switch_key as cs_key
 from os_ken.app.wsgi import ControllerBase
 from os_ken.app.wsgi import Response
@@ -255,6 +256,7 @@ LOG = logging.getLogger(__name__)
 
 
 class RestQoSAPI(app_manager.OSKenApp):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
                     ofproto_v1_2.OFP_VERSION,
@@ -266,6 +268,7 @@ class RestQoSAPI(app_manager.OSKenApp):
         'wsgi': WSGIApplication}
 
     def __init__(self, *args, **kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(RestQoSAPI, self).__init__(*args, **kwargs)
 
         # logger configure
@@ -281,6 +284,7 @@ class RestQoSAPI(app_manager.OSKenApp):
         wsgi.register(QoSController, self.data)
 
     def stats_reply_handler(self, ev):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         msg = ev.msg
         dp = msg.datapath
 
@@ -305,6 +309,7 @@ class RestQoSAPI(app_manager.OSKenApp):
 
     @set_ev_cls(conf_switch.EventConfSwitchSet)
     def conf_switch_set_handler(self, ev):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if ev.key == cs_key.OVSDB_ADDR:
             QoSController.set_ovsdb_addr(ev.dpid, ev.value)
         else:
@@ -312,6 +317,7 @@ class RestQoSAPI(app_manager.OSKenApp):
 
     @set_ev_cls(conf_switch.EventConfSwitchDel)
     def conf_switch_del_handler(self, ev):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if ev.key == cs_key.OVSDB_ADDR:
             QoSController.delete_ovsdb_addr(ev.dpid)
         else:
@@ -319,6 +325,7 @@ class RestQoSAPI(app_manager.OSKenApp):
 
     @set_ev_cls(dpset.EventDP, dpset.DPSET_EV_DISPATCHER)
     def handler_datapath(self, ev):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if ev.enter:
             QoSController.regist_ofs(ev.dp, self.CONF)
         else:
@@ -327,16 +334,19 @@ class RestQoSAPI(app_manager.OSKenApp):
     # for OpenFlow version1.0
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def stats_reply_handler_v1_0(self, ev):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self.stats_reply_handler(ev)
 
     # for OpenFlow version1.2 or later
     @set_ev_cls(ofp_event.EventOFPStatsReply, MAIN_DISPATCHER)
     def stats_reply_handler_v1_2(self, ev):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self.stats_reply_handler(ev)
 
     # for OpenFlow version1.2 or later
     @set_ev_cls(ofp_event.EventOFPQueueStatsReply, MAIN_DISPATCHER)
     def queue_stats_reply_handler_v1_2(self, ev):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         self.stats_reply_handler(ev)
 
     # for OpenFlow version1.2 or later
@@ -346,11 +356,14 @@ class RestQoSAPI(app_manager.OSKenApp):
 
 
 class QoSOfsList(dict):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     def __init__(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(QoSOfsList, self).__init__()
 
     def get_ofs(self, dp_id):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if len(self) == 0:
             raise ValueError('qos sw is not connected.')
 
@@ -373,17 +386,20 @@ class QoSOfsList(dict):
 
 
 class QoSController(ControllerBase):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     _OFS_LIST = QoSOfsList()
     _LOGGER = None
 
     def __init__(self, req, link, data, **config):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(QoSController, self).__init__(req, link, data, **config)
         self.dpset = data['dpset']
         self.waiters = data['waiters']
 
     @classmethod
     def set_logger(cls, logger):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         cls._LOGGER = logger
         cls._LOGGER.propagate = False
         hdlr = logging.StreamHandler()
@@ -393,6 +409,7 @@ class QoSController(ControllerBase):
 
     @staticmethod
     def regist_ofs(dp, CONF):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if dp.id in QoSController._OFS_LIST:
             return
 
@@ -411,6 +428,7 @@ class QoSController(ControllerBase):
 
     @staticmethod
     def unregist_ofs(dp):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if dp.id in QoSController._OFS_LIST:
             del QoSController._OFS_LIST[dp.id]
             QoSController._LOGGER.info('dpid=%s: Leave qos switch.',
@@ -418,12 +436,14 @@ class QoSController(ControllerBase):
 
     @staticmethod
     def set_ovsdb_addr(dpid, value):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ofs = QoSController._OFS_LIST.get(dpid, None)
         if ofs is not None:
             ofs.set_ovsdb_addr(dpid, value)
 
     @staticmethod
     def delete_ovsdb_addr(dpid):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ofs = QoSController._OFS_LIST.get(dpid, None)
         if ofs is not None:
             ofs.set_ovsdb_addr(dpid, None)
@@ -431,82 +451,96 @@ class QoSController(ControllerBase):
     @route('qos_switch', BASE_URL + '/queue/{switchid}',
            methods=['GET'], requirements=REQUIREMENTS)
     def get_queue(self, req, switchid, **_kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'get_queue', None)
 
     @route('qos_switch', BASE_URL + '/queue/{switchid}',
            methods=['POST'], requirements=REQUIREMENTS)
     def set_queue(self, req, switchid, **_kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'set_queue', None)
 
     @route('qos_switch', BASE_URL + '/queue/{switchid}',
            methods=['DELETE'], requirements=REQUIREMENTS)
     def delete_queue(self, req, switchid, **_kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'delete_queue', None)
 
     @route('qos_switch', BASE_URL + '/queue/status/{switchid}',
            methods=['GET'], requirements=REQUIREMENTS)
     def get_status(self, req, switchid, **_kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'get_status', self.waiters)
 
     @route('qos_switch', BASE_URL + '/rules/{switchid}',
            methods=['GET'], requirements=REQUIREMENTS)
     def get_qos(self, req, switchid, **_kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'get_qos', self.waiters)
 
     @route('qos_switch', BASE_URL + '/rules/{switchid}/{vlanid}',
            methods=['GET'], requirements=REQUIREMENTS)
     def get_vlan_qos(self, req, switchid, vlanid, **_kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._access_switch(req, switchid, vlanid,
                                    'get_qos', self.waiters)
 
     @route('qos_switch', BASE_URL + '/rules/{switchid}',
            methods=['POST'], requirements=REQUIREMENTS)
     def set_qos(self, req, switchid, **_kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'set_qos', self.waiters)
 
     @route('qos_switch', BASE_URL + '/rules/{switchid}/{vlanid}',
            methods=['POST'], requirements=REQUIREMENTS)
     def set_vlan_qos(self, req, switchid, vlanid, **_kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._access_switch(req, switchid, vlanid,
                                    'set_qos', self.waiters)
 
     @route('qos_switch', BASE_URL + '/rules/{switchid}',
            methods=['DELETE'], requirements=REQUIREMENTS)
     def delete_qos(self, req, switchid, **_kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'delete_qos', self.waiters)
 
     @route('qos_switch', BASE_URL + '/rules/{switchid}/{vlanid}',
            methods=['DELETE'], requirements=REQUIREMENTS)
     def delete_vlan_qos(self, req, switchid, vlanid, **_kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._access_switch(req, switchid, vlanid,
                                    'delete_qos', self.waiters)
 
     @route('qos_switch', BASE_URL + '/meter/{switchid}',
            methods=['GET'], requirements=REQUIREMENTS)
     def get_meter(self, req, switchid, **_kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'get_meter', self.waiters)
 
     @route('qos_switch', BASE_URL + '/meter/{switchid}',
            methods=['POST'], requirements=REQUIREMENTS)
     def set_meter(self, req, switchid, **_kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'set_meter', self.waiters)
 
     @route('qos_switch', BASE_URL + '/meter/{switchid}',
            methods=['DELETE'], requirements=REQUIREMENTS)
     def delete_meter(self, req, switchid, **_kwargs):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return self._access_switch(req, switchid, VLANID_NONE,
                                    'delete_meter', self.waiters)
 
     def _access_switch(self, req, switchid, vlan_id, func, waiters):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         try:
             rest = req.json if req.body else {}
         except ValueError:
@@ -536,6 +570,7 @@ class QoSController(ControllerBase):
 
     @staticmethod
     def _conv_toint_vlanid(vlan_id):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if vlan_id != REST_ALL:
             vlan_id = int(vlan_id)
             if (vlan_id != VLANID_NONE and
@@ -547,12 +582,14 @@ class QoSController(ControllerBase):
 
 
 class QoS(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     _OFCTL = {ofproto_v1_0.OFP_VERSION: ofctl_v1_0,
               ofproto_v1_2.OFP_VERSION: ofctl_v1_2,
               ofproto_v1_3.OFP_VERSION: ofctl_v1_3}
 
     def __init__(self, dp, CONF):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         super(QoS, self).__init__()
         self.vlan_list = {}
         self.vlan_list[VLANID_NONE] = 0  # for VLAN=None
@@ -585,6 +622,7 @@ class QoS(object):
         self.ofctl = self._OFCTL[self.version]
 
     def set_default_flow(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if self.version == ofproto_v1_0.OFP_VERSION:
             return
 
@@ -601,6 +639,7 @@ class QoS(object):
         self.ofctl.mod_flow_entry(self.dp, flow, cmd)
 
     def set_ovsdb_addr(self, dpid, ovsdb_addr):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         old_address = self.ovsdb_addr
         if old_address == ovsdb_addr:
             return
@@ -619,11 +658,13 @@ class QoS(object):
         self.ovs_bridge = ovs_bridge
 
     def _update_vlan_list(self, vlan_list):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         for vlan_id in self.vlan_list.keys():
             if vlan_id is not VLANID_NONE and vlan_id not in vlan_list:
                 del self.vlan_list[vlan_id]
 
     def _get_cookie(self, vlan_id):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if vlan_id == REST_ALL:
             vlan_ids = self.vlan_list.keys()
         else:
@@ -642,11 +683,14 @@ class QoS(object):
 
     @staticmethod
     def _cookie_to_qosid(cookie):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         return cookie & ofproto_v1_3_parser.UINT32_MAX
 
     # REST command template
     def rest_command(func):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         def _rest_command(*args, **kwargs):
+            LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
             key, value = func(*args, **kwargs)
             switch_id = dpid_lib.dpid_to_str(args[0].dp.id)
             return {REST_SWITCHID: switch_id,
@@ -655,6 +699,7 @@ class QoS(object):
 
     @rest_command
     def get_status(self, req, vlan_id, waiters):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if self.version == ofproto_v1_0.OFP_VERSION:
             raise ValueError('get_status operation is not supported')
 
@@ -663,6 +708,7 @@ class QoS(object):
 
     @rest_command
     def get_queue(self, rest, vlan_id):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if len(self.queue_list):
             msg = {'result': 'success',
                    'details': self.queue_list}
@@ -674,6 +720,7 @@ class QoS(object):
 
     @rest_command
     def set_queue(self, rest, vlan_id):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if self.ovs_bridge is None:
             msg = {'result': 'failure',
                    'details': 'ovs_bridge is not exists'}
@@ -723,6 +770,7 @@ class QoS(object):
         return REST_COMMAND_RESULT, msg
 
     def _delete_queue(self):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if self.ovs_bridge is None:
             return False
 
@@ -733,6 +781,7 @@ class QoS(object):
 
     @rest_command
     def delete_queue(self, rest, vlan_id):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if self._delete_queue():
             msg = 'success'
             self.queue_list.clear()
@@ -743,6 +792,7 @@ class QoS(object):
 
     @rest_command
     def set_qos(self, rest, vlan_id, waiters):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         msgs = []
         cookie_list = self._get_cookie(vlan_id)
         for cookie, vid in cookie_list:
@@ -751,6 +801,7 @@ class QoS(object):
         return REST_COMMAND_RESULT, msgs
 
     def _set_qos(self, cookie, rest, waiters, vlan_id):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         match_value = rest[REST_MATCH]
         if vlan_id:
             match_value[REST_DL_VLAN] = vlan_id
@@ -800,6 +851,7 @@ class QoS(object):
 
     @rest_command
     def get_qos(self, rest, vlan_id, waiters):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         rules = {}
         msgs = self.ofctl.get_flow_stats(self.dp, waiters)
         if str(self.dp.id) in msgs:
@@ -827,6 +879,7 @@ class QoS(object):
 
     @rest_command
     def delete_qos(self, rest, vlan_id, waiters):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         try:
             if rest[REST_QOS_ID] == REST_ALL:
                 qos_id = REST_ALL
@@ -891,6 +944,7 @@ class QoS(object):
 
     @rest_command
     def set_meter(self, rest, vlan_id, waiters):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if self.version == ofproto_v1_0.OFP_VERSION:
             raise ValueError('set_meter operation is not supported')
 
@@ -900,6 +954,7 @@ class QoS(object):
         return REST_COMMAND_RESULT, msgs
 
     def _set_meter(self, rest, waiters):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         cmd = self.dp.ofproto.OFPMC_ADD
         try:
             self.ofctl.mod_meter_entry(self.dp, rest, cmd)
@@ -913,6 +968,7 @@ class QoS(object):
 
     @rest_command
     def get_meter(self, rest, vlan_id, waiters):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if (self.version == ofproto_v1_0.OFP_VERSION or
                 self.version == ofproto_v1_2.OFP_VERSION):
             raise ValueError('get_meter operation is not supported')
@@ -922,6 +978,7 @@ class QoS(object):
 
     @rest_command
     def delete_meter(self, rest, vlan_id, waiters):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if (self.version == ofproto_v1_0.OFP_VERSION or
                 self.version == ofproto_v1_2.OFP_VERSION):
             raise ValueError('delete_meter operation is not supported')
@@ -938,6 +995,7 @@ class QoS(object):
         return REST_COMMAND_RESULT, msg
 
     def _to_of_flow(self, cookie, priority, match, actions):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         flow = {'cookie': cookie,
                 'priority': priority,
                 'flags': 0,
@@ -948,6 +1006,7 @@ class QoS(object):
         return flow
 
     def _to_rest_rule(self, flow):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         ruleid = QoS._cookie_to_qosid(flow[REST_COOKIE])
         rule = {REST_QOS_ID: ruleid}
         rule.update({REST_PRIORITY: flow[REST_PRIORITY]})
@@ -957,6 +1016,7 @@ class QoS(object):
 
 
 class Match(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     _CONVERT = {REST_DL_TYPE:
                 {REST_DL_TYPE_ARP: ether.ETH_TYPE_ARP,
@@ -970,8 +1030,10 @@ class Match(object):
 
     @staticmethod
     def to_openflow(rest):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
         def __inv_combi(msg):
+            LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
             raise ValueError('Invalid combination: [%s]' % msg)
 
         def __inv_2and1(*args):
@@ -1086,6 +1148,7 @@ class Match(object):
 
     @staticmethod
     def to_rest(openflow):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         of_match = openflow[REST_MATCH]
 
         mac_dontcare = mac.haddr_to_str(mac.DONTCARE)
@@ -1117,6 +1180,7 @@ class Match(object):
 
     @staticmethod
     def to_mod_openflow(of_match):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         mac_dontcare = mac.haddr_to_str(mac.DONTCARE)
         ip_dontcare = '0.0.0.0'
         ipv6_dontcare = '::'
@@ -1141,9 +1205,11 @@ class Match(object):
 
 
 class Action(object):
+    LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
 
     @staticmethod
     def to_rest(flow):
+        LOG.info('%s(): caller(): %s', log_utils.get_fname(1), log_utils.get_fname(2))
         if REST_ACTION in flow:
             actions = []
             for act in flow[REST_ACTION]:
